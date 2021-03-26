@@ -14,3 +14,34 @@ exports.helloWorld = functions.https.onRequest((request,response) => {
         response.send("Hello from Firebase!");
     }
 });
+
+exports.timetableapi = functions.https.onRequest((request, response) => {
+    response.set('Access-Control-Allow-Origin', '*');
+    response.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS, POST');
+    response.set('Access-Control-Allow-Headers', 'Content-Type');
+
+    let stoptimesurl = 'https://firebasestorage.googleapis.com/v0/b/train-time-api.appspot.com/o/'+request.query.agency_id+'%2Fstop_times.json?alt=media';
+    let calendarurl = 'https://firebasestorage.googleapis.com/v0/b/train-time-api.appspot.com/o/'+request.query.agency_id+'%2Fcalendar.json?alt=media';
+    let calendar_datesurl = 'https://firebasestorage.googleapis.com/v0/b/train-time-api.appspot.com/o/'+request.query.agency_id+'%2Fcalendar_dates.json?alt=media';
+    let tripsurl = 'https://firebasestorage.googleapis.com/v0/b/train-time-api.appspot.com/o/'+request.query.agency_id+'%2Ftrips.json?alt=media'; 
+
+    const https = require('https');
+        
+    https.get(stoptimesurl, function (res) {
+        let buf = [];
+        res.on('data', function(chunk) {
+        buf.push(chunk);
+        }).on('end', function() {
+        let text   = Buffer.concat(buf);
+        let stoptimes_result = JSON.parse(text);
+        let a = [];
+        for(let i=0;i<stoptimes_result.length;i++){
+            if(stoptimes_result[i].stop_id!==request.query.stop_id) continue;
+            a.push(stoptimes_result[i]);
+        }
+        response.send(JSON.stringify(a));
+        return;
+        });
+    });
+    return;
+});
